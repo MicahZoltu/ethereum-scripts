@@ -1,0 +1,9 @@
+{
+  "name": "ethereum-scripts",
+  "version": "1.0.0",
+  "dependencies": {
+    "@types/node": "^8.0.17",
+    "ethjs": "^0.2.7",
+    "typescript": "^2.4.2"
+  }
+}
