@@ -5,7 +5,7 @@ npm install
 
 ## Build (CLI)
 ```
-tsc
+npx tsc
 ```
 NOTE: this will also watch the directory for changes and recompile automatically, so you may want to run it as a background job
 
