@@ -17,7 +17,7 @@ NOTE: this will also watch the directory for changes and recompile automatically
 
 ## Run (CLI)
 ```
-node output/sandbox.ts
+node output/sandbox.js
 ```
 
 ## Run (VSCode)
