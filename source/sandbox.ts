@@ -2,8 +2,8 @@ import * as Ethjs from 'ethjs';
 import * as EthjsAbi from 'ethjs-abi';
 import { Abi, AbiEvent } from 'ethjs-shared';
 
-const start_block = 2375000; // before serpent rep contract upload
-const end_block = 4090000; // after serpent rep freeze
+const start_block = 2378196; // serpent rep upload block number
+const end_block = 4086410; // serpent rep freeze block number
 const oasis_contract_address = '0x83ce340889c15a3b4d38cfcd1fc93e5d8497691f';
 const etherdelta_contract_address = '0x8d12A197cB00D4747a1fe03395095ce2A5CC6819';
 const serpent_rep_contract_address = '0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5';
@@ -100,7 +100,7 @@ async function processEtherdelta(eth: Ethjs) {
 		process.stdout.write(`\r[EtherDelta] Found: ${Object.keys(collected_addresses).length}; Completion: ${Math.floor((i-start_block)*100/(end_block - start_block))}%`);
 		const from_block = i;
 		const to_block = i + 5000;
-		i += 5000;
+		i += 5001;
 		const logs = await eth.getLogs({
 			fromBlock: `0x${from_block.toString(16)}`,
 			toBlock: `0x${to_block.toString(16)}`,
@@ -116,10 +116,12 @@ async function processEtherdelta(eth: Ethjs) {
 	let sum = new Ethjs.BN(0);
 	const remaining_addresses = {};
 	for (let address in collected_addresses) {
-		const { tokens_escrowed } = await etherdelta.tokens(serpent_rep_contract_address, address);
-		if (tokens_escrowed == 0) continue;
-		sum = sum.add(tokens_escrowed);
-		remaining_addresses[address] = tokens_escrowed.toString(10);
+		if (collected_addresses.hasOwnProperty(address)) {
+			const { tokens_escrowed } = await etherdelta.tokens(serpent_rep_contract_address, address);
+			if (tokens_escrowed == 0) continue;
+			sum = sum.add(tokens_escrowed);
+			remaining_addresses[address] = tokens_escrowed.toString(10);
+		}
 	}
 	console.log();
 	console.log(`[EtherDelta] Total REP Escrowed: ~${sum.div(new Ethjs.BN('1000000000000000000', 10)).toString(10)}`)

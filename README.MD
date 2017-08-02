@@ -11,7 +11,7 @@ NOTE: this will also watch the directory for changes and recompile automatically
 
 ## Build (VSCode)
 ```
-command palette > Run Build Taks (ctrl + shift + B)
+command palette > Run Build Task (ctrl + shift + B)
 ```
 NOTE: this will also watch the directory for changes and recompile automatically, so you do not need to run it again unless you kill/cancel it
 
