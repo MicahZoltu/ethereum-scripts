@@ -1,10 +1,12 @@
 import fetch from 'node-fetch'
+import { Boolean as ABoolean, Number as ANumber, String as AString, Literal as ALiteral, Record as ARecord, Union as AUnion, Array as AArray } from 'runtypes'
 import { ethereum, mnemonic, secp256k1, hdWallet, keccak256 } from '@zoltu/ethereum-crypto'
 import { FetchJsonRpc, FetchDependencies } from '@zoltu/solidity-typescript-generator-fetch-dependencies'
 import { encodeMethod } from '@zoltu/ethereum-abi-encoder'
 import { DAO } from './the-dao'
 import { addressString, attoString, nanoString, stringToAtto } from './utils'
 import { createLedgerRpc, createMnemonicRpc } from './rpc-factories'
+import { randomBytes } from 'crypto'
 
 const jsonRpcHttpEndpoint = 'https://ethereum.zoltu.io'
 const gasPrice = 151n * 10n ** 9n
@@ -101,10 +103,111 @@ export async function executeContract() {
 	console.log(attoString(daoSupply))
 }
 
+export async function niceHash() {
+	const Order = ARecord({
+		acceptedSpeed: AString.withConstraint(x => /^\d+(\.\d+)?$/.test(x)),
+		alive: ABoolean,
+		id: AString,
+		limit: AString.withConstraint(x => /^\d+(\.\d+)?$/.test(x)),
+		payingSpeed: AString.withConstraint(x => /^\d+(\.\d+)?$/.test(x)),
+		price: AString.withConstraint(x => /^\d+(\.\d+)?$/.test(x)),
+		rigsCount: ANumber,
+		type: AUnion(ALiteral('FIXED'), ALiteral('STANDARD')),
+	})
+	const Book = ARecord({
+		displayMarketFactor: ALiteral('TH'),
+		marketFactor: AString.withConstraint(x => /^\d+(\.\d+)?$/.test(x)),
+		orders: AArray(Order),
+		pagination: ARecord({
+			size: ANumber,
+			page: ANumber,
+			totalPageCount: ANumber,
+		}),
+		totalSpeed: AString.withConstraint(x => /^\d+(\.\d+)?$/.test(x)),
+		updatedTs: AString.withConstraint(x => /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z/.test(x))
+	})
+	const OrderBook = ARecord({
+		stats: ARecord({
+			EU: Book,
+			USA: Book,
+		})
+	})
+	async function sign(publicKey: string, privateKey: string, time: string, nonce: string, organization: string, method: 'GET' | 'POST', path: string, queryString?: string, body?: string) {
+		const encoder = new TextEncoder()
+		const signedPayload = Uint8Array.of(
+			...encoder.encode(publicKey),
+			0,
+			...encoder.encode(time),
+			0,
+			...encoder.encode(nonce),
+			0,
+			0,
+			...encoder.encode(organization),
+			0,
+			0,
+			...encoder.encode(method),
+			0,
+			...encoder.encode(path),
+			0,
+			...(queryString === undefined ? [] : encoder.encode(queryString)),
+			...(body === undefined ? [] : [0, ...encoder.encode(body)]),
+		)
+		const key = await crypto.subtle.importKey('raw', encoder.encode(privateKey), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+		const signature = await crypto.subtle.sign('HMAC', key, signedPayload)
+		const signatureString = Array.from(new Uint8Array(signature)).map(x => x.toString(16).padStart(2, '0')).join('')
+		return signatureString
+	}
+
+	const apiKeyPublic = ''
+	const apiKeyPrivate = ''
+	const organizationId = ''
+
+	async function makeRequest(method: 'GET' | 'POST', path: string, queryString?: string, body?: string) {
+		const time = new Date().getTime().toString(10)
+		const nonce = randomBytes(18).toString('hex')
+		const signature = await sign(apiKeyPublic, apiKeyPrivate, time, nonce, organizationId, method, path, queryString, body)
+		const url = `https://api2.nicehash.com${path}?${queryString}`
+
+		const response = await fetch(url, {
+			headers: {
+				'X-Time': time,
+				'X-Nonce': nonce,
+				'X-Organization-Id': organizationId,
+				'X-Request-Id': randomBytes(18).toString('hex'),
+				'X-Auth': `${apiKeyPublic}:${signature}`
+			},
+			method,
+			body,
+		})
+		if (!response.ok) throw new Error(`Response Status Code not OK: ${response.status}; ${response.statusText}\n${await response.text()}`)
+		const responseBody = await response.json()
+		return responseBody
+	}
+
+	const prices = await makeRequest('GET', '/main/api/v2/hashpower/orderBook', 'algorithm=DAGGERHASHIMOTO')
+	const checkedPrices = OrderBook.check(prices)
+	const targetHashPower = 0.2
+	const euOrders = checkedPrices.stats.EU.orders
+		.filter(x => x.type === 'STANDARD')
+		.sort((a,b) => Number.parseFloat(a.price) - Number.parseFloat(b.price))
+	let totalAcceptedSpeed = 0
+	let totalPayingSpeed = 0
+	let priceReached = 0
+	for (const order of euOrders) {
+		priceReached = Number.parseFloat(order.price)
+		totalAcceptedSpeed += Number.parseFloat(order.acceptedSpeed)
+		totalPayingSpeed += Number.parseFloat(order.payingSpeed)
+		if (totalAcceptedSpeed >= targetHashPower) break
+	}
+	console.log(`Accepted: ${totalAcceptedSpeed}`)
+	console.log(`Paying: ${totalPayingSpeed}`)
+	console.log(`Price: ${priceReached}`)
+}
+
 // necessary so @peculiar/webcrypto looks like browser WebCrypto, which @zoltu/ethereum-crypto needs
 import('@peculiar/webcrypto')
 	.then(webcrypto => (globalThis as any).crypto = new webcrypto.Crypto())
-	.then(readStorage)
+	.then(niceHash)
 	.then(() => process.exit())
 	.catch(error => {
 		console.log('An error occurred.');
