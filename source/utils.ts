@@ -46,3 +46,13 @@ export async function awaitUserInput() {
 export function addressString(address: bigint) {
 	return address.toString(16).padStart(40, '0')
 }
+
+export function bigintToUint8Array(value: bigint, numberOfBytes: number) {
+	if (typeof value === 'number') value = BigInt(value)
+	if (value >= 2n ** BigInt(numberOfBytes * 8) || value < 0n) throw new Error(`Cannot fit ${value} into a ${numberOfBytes}-byte unsigned integer.`)
+	const result = new Uint8Array(numberOfBytes)
+	for (let i = 0; i < result.length; ++i) {
+		result[i] = Number((value >> BigInt(numberOfBytes - i - 1) * 8n) & 0xffn)
+	}
+	return result
+}

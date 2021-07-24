@@ -8,9 +8,9 @@ export class MnemonicSigner {
 		public readonly address: bigint,
 	) { }
 
-	public static readonly create = async (words: string[]) => {
+	public static readonly create = async (words: string | string[], derivationPath?: string) => {
 		const seed = await mnemonic.toSeed(words)
-		const privateKey = await hdWallet.privateKeyFromSeed(seed)
+		const privateKey = await hdWallet.privateKeyFromSeed(seed, derivationPath)
 		const publicKey = await secp256k1.privateKeyToPublicKey(privateKey)
 		const address = await ethereum.publicKeyToAddress(publicKey)
 		return new MnemonicSigner(privateKey, publicKey, address)

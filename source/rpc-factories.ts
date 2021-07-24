@@ -16,8 +16,8 @@ export async function createLedgerRpc(jsonRpcHttpEndpoint: string, gasPrice: big
 }
 
 // default address: 0xfc2077CA7F403cBECA41B1B0F62D91B5EA631B5En
-export async function createMnemonicRpc(jsonRpcHttpEndpoint: string, gasPrice: bigint, words: string = 'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong') {
-	const signer = await MnemonicSigner.create(words.split(' '))
+export async function createMnemonicRpc(jsonRpcHttpEndpoint: string, gasPrice: bigint, words: string = 'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong', derivationPath?: string) {
+	const signer = await MnemonicSigner.create(words.split(' '), derivationPath)
 	const gasPriceInAttoethProvider = async () => gasPrice
 	const addressProvider = async () => signer.address
 	const signatureProvider = signer.sign
