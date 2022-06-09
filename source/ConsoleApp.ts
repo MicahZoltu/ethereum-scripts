@@ -44,11 +44,18 @@ export async function getAddressFromKey() {
 export async function addressFromMnemonic() {
 	const words = await prompt('Mnemonic: ')
 	const seed = await mnemonic.toSeed(words)
-	const privateKey = await hdWallet.privateKeyFromSeed(seed, `m/44'/60'/0'/0/0`)
-	const publicKey = await secp256k1.privateKeyToPublicKey(privateKey)
-	const address = await ethereum.publicKeyToAddress(publicKey)
-	const addressString = await ethereum.addressToChecksummedString(address)
-	console.log(addressString)
+	for (let i = 0; i < 5; ++i) {
+		for (let j = 0; j < 5; ++j) {
+			for (let k = 0; k < 5; ++k) {
+				const derivationPath = `m/44'/60'/${i}'/${j}/${k}`
+				const privateKey = await hdWallet.privateKeyFromSeed(seed, derivationPath)
+				const publicKey = await secp256k1.privateKeyToPublicKey(privateKey)
+				const address = await ethereum.publicKeyToAddress(publicKey)
+				const addressString = await ethereum.addressToChecksummedString(address)
+				console.log(`${derivationPath}: ${addressString}`)
+			}
+		}
+	}
 }
 
 export async function addressFromLedger() {
@@ -58,7 +65,7 @@ export async function addressFromLedger() {
 			const rpc = await createLedgerRpc(jsonRpcHttpEndpoint, gasPrice, senderDerivationPath)
 			const address = await rpc.addressProvider()
 			const addressString = await ethereum.addressToChecksummedString(address)
-			console.log(addressString)
+			console.log(`${senderDerivationPath}: ${addressString}`)
 		}
 	}
 }
