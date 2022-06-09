@@ -21,7 +21,7 @@
 		"@zoltu/solidity-typescript-generator": "6.1.0",
 		"@zoltu/solidity-typescript-generator-fetch-dependencies": "6.1.0",
 		"funtypes": "4.1.0",
-		"node-fetch": "2.6.1",
+		"node-fetch": "2.6.7",
 		"runtypes": "5.0.1",
 		"ts-node": "9.1.1",
 		"typescript": "4.1.3"
