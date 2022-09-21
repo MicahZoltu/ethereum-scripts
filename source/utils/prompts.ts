@@ -2,20 +2,29 @@ import * as readline from 'readline'
 import * as microEthSigner from 'micro-eth-signer'
 import * as bip32 from '@scure/bip32'
 import * as bip39 from '@scure/bip39'
-import { bigintToUint8Array, bytesToUnsigned, nanoString, stringToAtto, stringToNano } from './bigint'
-import { fromChecksummedAddress } from './ethereum'
+import { attoString, bigintToDecimalString, bigintToUint8Array, bytesToUnsigned, decimalStringToBigint, nanoString, stringToNano } from './bigint'
+import { fromChecksummedAddress, toChecksummedAddress } from './ethereum'
+import { EncodableArray } from '@zoltu/ethereum-abi-encoder'
+import { tokens } from './tokens'
 
 export async function promptForPrivateKey() {
 	return withPrompt(async prompt => {
 		const wordsOrKey = await prompt('🔑 Mnemonic or Private Key: ')
 		if (wordsOrKey.trim().length === 0) throw new Error(`Mnemonic or private key required, but received nothing.`)
 		const privateKey = wordsOrKey.includes(' ')
-			? bytesToUnsigned(bip32.HDKey.fromMasterSeed(await bip39.mnemonicToSeed(wordsOrKey)).derive(await prompt(`🔖 Derivation Path (m/44'/60'/0'/0/0): `) || `m/44'/60'/0'/0/0`).privateKey!)
+			? bytesToUnsigned(bip32.HDKey.fromMasterSeed(await bip39.mnemonicToSeed(wordsOrKey)).derive(await promptForDerivationPath(prompt)).privateKey!)
 			: BigInt(wordsOrKey)
 		const address = microEthSigner.Address.fromPrivateKey(bigintToUint8Array(privateKey, 32))
 		console.log(`\x1b[32mSigner Address\x1b[0m: ${address}`)
 		return { privateKey, address: BigInt(address) }
 	})
+}
+
+async function promptForDerivationPath(prompt: Prompt) {
+	const derivationPath = await prompt(`🔖 Derivation Path or Index (m/44'/60'/0'/0/0): `) || `m/44'/60'/0'/0/0`
+	return (/^\d+$/.test(derivationPath))
+		? `m/44'/60'/0'/0/${derivationPath}`
+		: derivationPath
 }
 
 export async function promptForGasFees() {
@@ -30,11 +39,33 @@ export async function promptForGasFees() {
 }
 
 export async function promptForEth(message: string = `Amount (in ETH): `) {
+	const amount = await promptForLargeNumber(message, 18n)
+	console.log(`\x1b[32mETH\x1b[0m: ${attoString(amount)}`)
+	return amount
+}
+
+export async function promptForTokenAmount(token: string, decimals: bigint) {
+	const amount = await promptForLargeNumber(`Amount (in ${token}): `, decimals)
+	console.log(`\x1b[32m${token}\x1b[0m: ${bigintToDecimalString(amount, decimals)}`)
+	return amount
+}
+
+export async function promptForLargeNumber(message: string, power: bigint) {
 	return withPrompt(async prompt => {
-		const amountString = await prompt(message)
-		const amount = stringToAtto(amountString)
-		return amount
+		const valueString = await prompt(message)
+		const value = decimalStringToBigint(valueString, Number(power))
+		return value
 	})
+}
+
+export async function promptForToken(call: (to: bigint, methodSignature: string, parameters: EncodableArray) => Promise<Uint8Array>) {
+	const name = (await promptForString('Token to buy: ')).toUpperCase()
+	if (!(tokens.hasOwnProperty(name))) throw new Error(`Unknown token, only [${Object.keys(tokens).join(',')}] are supported.`)
+	const address = tokens[name as keyof typeof tokens]
+	const result = await call(address, 'decimals()', [])
+	const decimals = bytesToUnsigned(result)
+	console.log(`\x1b[32mName\x1b[0m: ${name}; \x1b[32mAddress\x1b[0m: ${toChecksummedAddress(address)}; \x1b[32mDecimals\x1b[0m: ${decimals.toString(10)}`)
+	return { name, address, decimals }
 }
 
 export async function promptForAddress(message: string, defaultValue: bigint | undefined = undefined) {

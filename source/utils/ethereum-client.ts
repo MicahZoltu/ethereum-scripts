@@ -16,9 +16,9 @@ export class EthereumClient {
 		private readonly extraHeaders: Record<string, string>,
 	) {}
 
-	public readonly callContractOffChain = async (to: bigint, methodSignature: string, parameters: EncodableArray) => {
+	public readonly callContractOffChain = async (to: bigint, methodSignature: string, parameters: EncodableArray, additionalParameters: Omit<Partial<IUnsignedTransaction1559>, 'to' | 'data'> = {}) => {
 		const data = await encodeMethod(async (message) => bytesToUnsigned(keccak_256(message)), methodSignature, parameters)
-		return this.call({ to, data })
+		return this.call({ to, data, ...additionalParameters })
 	}
 
 	public readonly getLatestBlock = async () => {
