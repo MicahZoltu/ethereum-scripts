@@ -14,7 +14,7 @@
 		"@zoltu/ethereum-abi-encoder": "5.0.4",
 		"@zoltu/rlp-encoder": "2.0.6",
 		"micro-eth-signer": "0.4.7",
-		"node-fetch": "3.2.6"
+		"node-fetch": "3.2.10"
 	},
 	"devDependencies": {
 		"@zoltu/typescript-transformer-append-js-extension": "1.0.1",
