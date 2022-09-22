@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"module": "CommonJS",
+		"module": "ESNext",
 		"target": "ESNext",
 		"moduleResolution": "node",
 		"sourceMap": true,
@@ -21,8 +21,13 @@
 
 		"rootDir": "./source",
 		"outDir": "./output",
+		"plugins": [ { "transform": "@zoltu/typescript-transformer-append-js-extension/output/index.js", "after": true, } ],
 	},
 	"include": [
-		"source/**/*.ts"
-	]
+		"source/**/*.ts",
+	],
+	"ts-node": {
+		"esm": true,
+		"compiler": "ttypescript",
+	}
 }

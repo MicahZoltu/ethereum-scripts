@@ -5,13 +5,24 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Console App",
+			"name": "Repay Compound",
 			"request": "launch",
 			"type": "pwa-node",
 			"cwd": "${workspaceFolder}",
-			"runtimeArgs": [ "-r", "ts-node/register" ],
-			"args": [ "${workspaceFolder}/source/ConsoleApp.ts" ],
-			"env": { "TS_NODE_PROJECT": "${workspaceFolder}/tsconfig.json" }
-		}
-	]
+			"runtimeArgs": [ "--preserve-symlinks", "--loader", "ts-node/esm" ],
+			"args": [ "${workspaceFolder}/source/repay-compound.ts" ],
+			"env": { "TS_NODE_PROJECT": "${workspaceFolder}/tsconfig.json" },
+			"console": "integratedTerminal",
+		},
+		{
+			"name": "Sign Message",
+			"request": "launch",
+			"type": "pwa-node",
+			"cwd": "${workspaceFolder}",
+			"runtimeArgs": [ "--preserve-symlinks", "--loader", "ts-node/esm" ],
+			"args": [ "${workspaceFolder}/source/sign-message.ts" ],
+			"env": { "TS_NODE_PROJECT": "${workspaceFolder}/tsconfig.json" },
+			"console": "integratedTerminal",
+		},
+	],
 }

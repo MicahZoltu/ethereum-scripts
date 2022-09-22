@@ -12,13 +12,16 @@ export type AbstractConstructorParameters<T extends abstract new (...args: any[]
 
 export type ToKeyedObject<T, U extends keyof T> = { [Key in T[U] & PropertyKey]: Extract<T, { [_ in U]: Key}> }
 
-export type TupleOf<T, N extends number> = N extends N ? number extends N ? T[] : _TupleOf<T, N, []> : never;
-type _TupleOf<T, N extends number, R extends unknown[]> = R['length'] extends N ? R : _TupleOf<T, N, [T, ...R]>;
+export type TupleOf<T, N extends number> = N extends N ? number extends N ? T[] : _TupleOf<T, N, []> : never
+type _TupleOf<T, N extends number, R extends unknown[]> = R['length'] extends N ? R : _TupleOf<T, N, [T, ...R]>
 
 export function isKeyOf<T extends {}, K extends string | number | symbol>(set: T, key: K): key is keyof T & K {
 	return key in set
 }
 
 export function assertNever(value: never): never {
-	throw new Error(`Unhandled discriminated union member: ${JSON.stringify(value)}`);
+	throw new Error(`Unhandled discriminated union member: ${JSON.stringify(value)}`)
 }
+
+export type DistributedPick<T, K extends string> = T extends unknown ? { [P in K & keyof T]: T[P] } : never
+export type DistributedOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never
