@@ -5,7 +5,7 @@ import { main } from "./utils/node"
 import { promptForAddress, promptForEnterKey, promptForGasFees, promptForLargeNumber, promptForPrivateKey, promptForToken, promptForTokenAmount } from './utils/prompts'
 import { tokens } from "./utils/tokens"
 
-const jsonRpcHttpEndpoint = 'http://localhost:8545'
+const jsonRpcHttpEndpoint = 'https://ethereum.zoltu.io'
 
 const quoter = fromChecksummedAddress('0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6')
 const swapRouter = fromChecksummedAddress('0xE592427A0AEce92De3Edee1F18E0157C05861564')

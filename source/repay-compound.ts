@@ -4,7 +4,7 @@ import { SigningEthereumClient } from './utils/ethereum-client'
 import { main } from "./utils/node"
 import { promptForAddress, promptForEnterKey, promptForEth, promptForGasFees, promptForPrivateKey } from './utils/prompts'
 
-const jsonRpcHttpEndpoint = 'http://localhost:8545'
+const jsonRpcHttpEndpoint = 'https://ethereum.zoltu.io'
 
 const cEtherRepayHelper =  fromChecksummedAddress('0xf859A1AD94BcF445A406B892eF0d3082f4174088')
 const repaySignature = 'repayBehalfExplicit(address borrower, address cEther)'

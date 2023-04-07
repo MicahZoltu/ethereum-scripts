@@ -1,6 +1,6 @@
 import { keccak_256 } from '@noble/hashes/sha3'
 import * as secp256k1 from '@noble/secp256k1'
-import { rlpEncode } from '@zoltu/rlp-encoder'
+import { rlpDecode, rlpEncode } from '@zoltu/rlp-encoder'
 import * as microEthSigner from 'micro-eth-signer'
 import { addressString, bigintToUint8Array, bytesToUnsigned, dataString } from './bigint'
 import { stripLeadingZeros } from './typed-arrays'
@@ -132,6 +132,30 @@ export function rlpEncode1559TransactionPayload(transaction: IUnsignedTransactio
 		toEncode.push(stripLeadingZeros(bigintToUint8Array(transaction.s, 32)))
 	}
 	return rlpEncode(toEncode)
+}
+
+export function rlpDecode1559TransactionPayload(encoded: Uint8Array): Omit<IUnsignedTransaction1559 | (IUnsignedTransaction1559 & ITransactionSignature), 'from'> {
+	const decoded = rlpDecode(encoded)
+	if (!Array.isArray(decoded)) throw new Error(`Expected an RLP encoded array of items, but got something else.`)
+	if (!(decoded[0] instanceof Uint8Array)) throw new Error(`Expected chainID but got something else.`)
+	if (!(decoded[1] instanceof Uint8Array)) throw new Error(`Expected nonce but got something else.`)
+	if (!(decoded[2] instanceof Uint8Array)) throw new Error(`Expected maxPriorityFeePerGas but got something else.`)
+	if (!(decoded[3] instanceof Uint8Array)) throw new Error(`Expected maxFeePerGas but got something else.`)
+	if (!(decoded[4] instanceof Uint8Array)) throw new Error(`Expected gasLimit but got something else.`)
+	if (!(decoded[5] instanceof Uint8Array)) throw new Error(`Expected to but got something else.`)
+	if (!(decoded[6] instanceof Uint8Array)) throw new Error(`Expected value but got something else.`)
+	if (!(decoded[7] instanceof Uint8Array)) throw new Error(`Expected data but got something else.`)
+	if (decoded[8] instanceof Uint8Array) throw new Error(`Expected access list but got something else.`)
+	const chainId = bytesToUnsigned(decoded[0])
+	const nonce = bytesToUnsigned(decoded[1])
+	const maxPriorityFeePerGas = bytesToUnsigned(decoded[2])
+	const maxFeePerGas = bytesToUnsigned(decoded[3])
+	const gasLimit = bytesToUnsigned(decoded[4])
+	const to = bytesToUnsigned(decoded[5])
+	const value = bytesToUnsigned(decoded[6])
+	const data = decoded[7]
+	// TODO: implement access list decoding
+	return { type: '1559', chainId, nonce, maxPriorityFeePerGas, maxFeePerGas, gasLimit, to, value, data, accessList: [] }
 }
 
 export function serializeTransactionToBytes(transaction: IUnsignedTransaction | ISignedTransaction): Uint8Array {

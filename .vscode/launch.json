@@ -24,5 +24,15 @@
 			"env": { "TS_NODE_PROJECT": "${workspaceFolder}/tsconfig.json" },
 			"console": "integratedTerminal",
 		},
+		{
+			"name": "Decode Transaction",
+			"request": "launch",
+			"type": "pwa-node",
+			"cwd": "${workspaceFolder}",
+			"runtimeArgs": [ "--preserve-symlinks", "--loader", "ts-node/esm" ],
+			"args": [ "${workspaceFolder}/source/decode-transaction.ts" ],
+			"env": { "TS_NODE_PROJECT": "${workspaceFolder}/tsconfig.json" },
+			"console": "integratedTerminal",
+		},
 	],
 }
